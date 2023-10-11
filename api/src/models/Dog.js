@@ -9,11 +9,11 @@ module.exports = (sequelize) => {
       defaulValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
-    img: {
+    name: {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    name: {
+    img: {
       type: DataTypes.STRING,
       allowNull: false,
     },
