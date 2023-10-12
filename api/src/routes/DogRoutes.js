@@ -3,12 +3,14 @@ const DogRouter = Router();
 const {
     getDogsHandler,
     getDogsByIdHandler,
-    getDogsByNameHandler
+    postDog,
 } = require('./../../handlers/Dog/DogHandler');
 
 //---------GET---------//
-DogRouter.get("/", getDogsHandler);
+DogRouter.get("/", getDogsHandler); //----Get all and Get by name----//
 DogRouter.get("/:id", getDogsByIdHandler);
-DogRouter.get("/search", getDogsByNameHandler);
+//---------POST---------//
+DogRouter.post("/create", postDog);
+
 
 module.exports = DogRouter;

@@ -18,29 +18,31 @@ const getApiDogs = async () => {
     }
 };
 
+const getBddDogs = async () => {
+    try {
+        const dbDog = await Dog.findAll({
+            include: {
+                model: Temperament,
+                through: {
+                    atributes: ['name'],
+                }
+            },
+        });
+        return cleanApi(dbDog);
+    } catch (error) {
+        console.error("getDbData: ", error.message)
+        throw new Error(error.message)
 
+    };
+};
 
 const getAllDogs = async () => {
-    const dbDog = await Dog.findAll({
-        // include: {
-        //     model: Temperament,
-        //     as: 'temperament',
-        //     attributes: ["id","name"],
-        //     through: {
-        //         attributes: [],
-        //     },
-        // },
-        // order: [
-        //     ['name', 'ASC']
-        // ],
-    });
-
-    const [apiDog] = await Promise.all([
-        getApiDogs()
-    ]);
+    const dbDog = await getBddDogs();
+    const apiDog = await getApiDogs();
 
     return [...dbDog, ...apiDog];
 };
+
 
 const getDogsById = async (id, source) => {
     if (source === "api") {
@@ -63,23 +65,54 @@ const getDogsById = async (id, source) => {
 };
 
 const getDogsByName = async (name) => {
-    // Obtener los datos de la API
-    const allDogs = await getApiDogs();
-  
-    // Filtrar los perros cuyos nombres coinciden con el nombre de búsqueda (insensible a mayúsculas y minúsculas)
-    const filteredDogs = allDogs.filter(dog => dog.name.toLowerCase() === name.toLowerCase());
-  
-    if (filteredDogs.length > 0) {
-      return filteredDogs;
-    } else {
-      throw new Error('No se encontró un perro con el nombre especificado');
+    const allDogsApi = await getApiDogs();
+    const allDogsBdd = await getBddDogs();
+    const allDogs = [...allDogsApi, ...allDogsBdd];
+    if (name) {
+        const filteredDogs = allDogs.filter(dog => dog.name.toLowerCase() === name.toLowerCase());
+        return filteredDogs;
+    } else throw new Error('No se encontró un perro con el nombre especificado');
+};
+
+const createDog = async ({
+    name,
+    temperament,
+    image,
+    life_span_min,
+    life_span_max,
+    height_min,
+    height_max,
+    weight_min,
+}) => {
+    try {
+        name = name.charAt(0).toUpperCase() + name.slice(1)
+
+        const newDog = await Dog.creat({
+            name,
+            temperament,
+            image,
+            life_span_min,
+            life_span_max,
+            height_min,
+            height_max,
+            weight_min,
+        });
+        const temp = Temperament.findAll({
+            where: { name: temperament },
+        });
+
+        await newDog.addTemperament(temp);
+
+        return newDog;
+    } catch (error) {
+        console.error('Error al crear el videojuego:', error.message);
+        throw error;
     }
-  };
-  
-  
+};
 
 module.exports = {
     getAllDogs,
     getDogsById,
-    getDogsByName
+    getDogsByName,
+    createDog
 }
