@@ -11,7 +11,7 @@ const getAllTemp = async () => {
         const uniqueTemperamentsSet = new Set(
             allDogs
                 .map((dog) => dog.temperament)
-                .filter((temp) => temp) // Filtra temperamentos nulos o vacíos
+                .filter((temp) => temp)
                 .flatMap((temp) => temp.split(',').map((t) => t.trim()))
         );
 
