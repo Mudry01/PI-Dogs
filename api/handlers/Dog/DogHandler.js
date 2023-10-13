@@ -2,7 +2,8 @@ const {
     getAllDogs,
     getDogsById,
     getDogsByName,
-    createDog
+    createDog,
+    getDogsBreeds
 } = require('./../../controllers/Dog/DogController');
 
 const getDogsHandler = async (req, res) => {
@@ -27,27 +28,44 @@ const getDogsByIdHandler = async (req, res) => {
     }
 };
 
+const getDogsByRazaHandler = async (req, res) => {
+    try {
+        const result = await getDogsBreeds();
+        res.status(200).json(result);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+};
+
 const postDog = async (req, res) => {
     const {
         name, temperament, image, life_span_min, life_span_max, height_min, height_max, weight_min, weight_max,
     } = req.body;
 
-    if(!name || !height_max || !height_min || !weight_max || !weight_min || !temperament){
+    console.log('Datos recibidos:', req.body);
+
+    if (typeof name !== 'string' || !name || !height_max || !height_min || !weight_max || !weight_min || !temperament || !life_span_min || !life_span_max) {
         return res.status(400).json({ error: 'Faltan datos obligatorios para crear un perro.' });
     }
-    const existingDog = await getDogsByName(name);
-    if (existingDog) {
-        return res.status(400).json({ error: 'El perro ya existe.' });
-    }
+
     if (life_span_min > life_span_max || height_min > height_max || weight_min > weight_max) {
         return res.status(400).json({ error: 'Los datos mínimos no pueden ser mayores que los máximos.' });
     }
+
     if (life_span_min <= 0 || life_span_min > 100 || life_span_max <= 0 || life_span_max > 100 ||
         height_min <= 0 || height_min > 100 || height_max <= 0 || height_max > 100 ||
         weight_min <= 0 || weight_min > 100 || weight_max <= 0 || weight_max > 100) {
         return res.status(400).json({ error: 'Los datos de vida, altura y peso deben estar en un rango válido.' });
     }
+
     try {
+        console.log('Buscando si ya existe el perro:', name);
+        const existingDog = await getDogsByName(name);
+        if (existingDog) {
+            console.log('Perro existente:', existingDog);
+            return res.status(400).json({ error: 'El perro ya existe.' });
+        }
+
         const newDog = await createDog(
             name,
             temperament,
@@ -57,16 +75,23 @@ const postDog = async (req, res) => {
             height_min,
             height_max,
             weight_min,
-            weight_max,
+            weight_max
         );
-        res.status(201).json(newDog);
+
+        return res.status(201).json(newDog);
     } catch (error) {
-        res.status(500).json({ error: 'Hubo un error en la creación del perro.' });
+        console.error('Error al crear el perro:', error.message);
+        return res.status(500).json({ error: 'Hubo un error en la creación del perro.' });
     }
-}
+};
+
+
+
+
 
 module.exports = {
     getDogsHandler,
     getDogsByIdHandler,
-    postDog
+    postDog,
+    getDogsByRazaHandler
 }

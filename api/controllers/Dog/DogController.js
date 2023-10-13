@@ -1,6 +1,6 @@
 const axios = require('axios');
 const { Dog, Temperament } = require('./../../src/db');
-const { cleanApi, cleanApiById } = require('../utils/utils');
+const { cleanApi, cleanBreeds } = require('../utils/utils');
 
 //.env
 require('dotenv').config();
@@ -23,8 +23,9 @@ const getBddDogs = async () => {
         const dbDog = await Dog.findAll({
             include: {
                 model: Temperament,
+                attributes: ['name'],
                 through: {
-                    atributes: ['name'],
+                    atributes: [],
                 }
             },
         });
@@ -64,17 +65,40 @@ const getDogsById = async (id, source) => {
     }
 };
 
+const getDogsBreeds = async () => {
+    try {
+        const response = await axios.get(URL);
+        return cleanBreeds(response.data);
+    } catch (error) {
+        console.log(`Error al obtener datos de la API: ${error.message}`);
+        return [];
+    }
+};
+
+// const getDogsByIdBeeds = async () => {
+//     const allDogsApi = await getApiDogs();
+//     const allDogsBdd = await getBddDogs();
+//     const allDogs = [...allDogsApi, ...allDogsBdd];
+// }
+
 const getDogsByName = async (name) => {
     const allDogsApi = await getApiDogs();
     const allDogsBdd = await getBddDogs();
     const allDogs = [...allDogsApi, ...allDogsBdd];
     if (name) {
         const filteredDogs = allDogs.filter(dog => dog.name.toLowerCase() === name.toLowerCase());
-        return filteredDogs;
-    } else throw new Error('No se encontró un perro con el nombre especificado');
+        if (filteredDogs.length > 0) {
+            return filteredDogs;
+        } else {
+            return null;
+        }
+    } else {
+        throw new Error('No se encontró un perro con el nombre especificado');
+    }
 };
 
-const createDog = async ({
+
+const createDog = async (
     name,
     temperament,
     image,
@@ -83,36 +107,56 @@ const createDog = async ({
     height_min,
     height_max,
     weight_min,
-}) => {
+    weight_max
+) => {
     try {
-        name = name.charAt(0).toUpperCase() + name.slice(1)
+        name = name.charAt(0).toUpperCase() + name.slice(1);
 
-        const newDog = await Dog.creat({
-            name,
-            temperament,
-            image,
-            life_span_min,
-            life_span_max,
-            height_min,
-            height_max,
-            weight_min,
-        });
-        const temp = Temperament.findAll({
-            where: { name: temperament },
+        const temperamentsList = temperament.split(',').map((temp) => temp.trim());
+        const createdTemperaments = [];
+
+        for (const temp of temperamentsList) {
+            let existingTemp = await Temperament.findOne({
+                where: { name: temp },
+            });
+
+            if (!existingTemp) {
+                existingTemp = await Temperament.create({
+                    name: temp,
+                });
+            }
+            createdTemperaments.push(existingTemp);
+        }
+        const newDog = await Dog.create({
+            name: name,
+            image: image || 'https://dog.ceo/api/breeds/image/random',
+            life_span_min: parseInt(life_span_min),
+            life_span_max: parseInt(life_span_max),
+            height_min: parseInt(height_min),
+            height_max: parseInt(height_max),
+            weight_min: parseInt(weight_min),
+            weight_max: parseInt(weight_max),
+            createdInBd: true,
         });
 
-        await newDog.addTemperament(temp);
+        await newDog.addTemperaments(createdTemperaments);
 
         return newDog;
     } catch (error) {
-        console.error('Error al crear el videojuego:', error.message);
+        console.error('Error al crear el perro:', error.message);
         throw error;
     }
 };
+
+
+
+
+
 
 module.exports = {
     getAllDogs,
     getDogsById,
     getDogsByName,
-    createDog
+    createDog,
+    getDogsBreeds
 }
