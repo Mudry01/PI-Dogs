@@ -148,7 +148,20 @@ const createDog = async (
     }
 };
 
+const deleteDog = async (id) => {
+    try {
+        const deleteDog = await Dog.findByPk(id);
+        if (!deleteDog) {
+            throw new Error('No se encontró el perro con el ID proporcionado');
+        }
+        await deleteDog.destroy();
 
+        return 'El perro se eliminó exitosamente.';
+    } catch (error) {
+        console.error('Error al eliminar el perro:', error.message);
+        throw error;
+    }
+};
 
 
 
@@ -158,5 +171,6 @@ module.exports = {
     getDogsById,
     getDogsByName,
     createDog,
-    getDogsBreeds
+    getDogsBreeds,
+    deleteDog
 }

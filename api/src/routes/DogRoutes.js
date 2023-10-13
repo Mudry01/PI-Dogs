@@ -5,6 +5,7 @@ const {
     getDogsByIdHandler,
     getDogsByRazaHandler,
     postDog,
+    deleteDogHandler
 } = require('./../../handlers/Dog/DogHandler');
 
 //---------GET---------//
@@ -14,6 +15,7 @@ DogRouter.get("/breeds", getDogsByRazaHandler);
 DogRouter.get("/:id", getDogsByIdHandler);
 //---------POST---------//
 DogRouter.post("/create", postDog);
-
+//---------DELETE--------//
+DogRouter.delete("/delete/:id", deleteDogHandler);
 
 module.exports = DogRouter;
