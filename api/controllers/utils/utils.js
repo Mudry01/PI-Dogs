@@ -13,6 +13,7 @@ const cleanApi = (arr) =>
             height_max: elem.height && elem.height.metric && elem.height.metric.includes('-') ? parseInt(elem.height.metric.split(' - ')[1].trim()) : null,
             weight_min: elem.weight && elem.weight.metric && elem.weight.metric.includes('-') ? parseInt(elem.weight.metric.split(' - ')[0].trim()) : null,
             weight_max: elem.weight && elem.weight.metric && elem.weight.metric.includes('-') ? parseInt(elem.weight.metric.split(' - ')[1].trim()) : null,
+            createdInBd: false,
         };
     });
 

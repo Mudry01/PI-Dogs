@@ -25,17 +25,17 @@ const getBddDogs = async () => {
                 model: Temperament,
                 attributes: ['name'],
                 through: {
-                    atributes: [],
+                    attributes: [],
                 }
             },
         });
-        return cleanApi(dbDog);
+        return dbDog;
     } catch (error) {
-        console.error("getDbData: ", error.message)
-        throw new Error(error.message)
-
-    };
+        console.error("getDbData: ", error.message);
+        throw new Error(error.message);
+    }
 };
+
 
 const getAllDogs = async () => {
     const dbDog = await getBddDogs();
@@ -47,14 +47,25 @@ const getAllDogs = async () => {
 
 const getDogsById = async (id, source) => {
     if (source === "api") {
+        // Obtén datos de la API y filtra el perro por ID
         const allDogs = await getApiDogs();
         const filteredDog = allDogs.find(dog => dog.id === parseInt(id));
 
         if (filteredDog) return filteredDog;
         else throw new Error('No se encontró un perro con el ID especificado');
-
     } else if (source === "bdd") {
-        const dog = await Dog.findByPk(id);
+        const dog = await Dog.findByPk(id, {
+            include: [
+                {
+                    model: Temperament,
+                    attributes: ['name'],
+                    through: {
+                        attributes: [],
+                    },
+                },
+            ],
+        });
+
         if (dog) {
             return dog;
         } else {
@@ -64,6 +75,7 @@ const getDogsById = async (id, source) => {
         throw new Error('Fuente no válida');
     }
 };
+
 
 const getDogsBreeds = async () => {
     try {
